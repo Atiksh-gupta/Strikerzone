@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>StrikerZone - Football Gear Hub</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #dfe9f3, #ffffff);
+      color: #222;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #009688;
+      padding: 20px;
+      text-align: center;
+      font-size: 2em;
+      letter-spacing: 2px;
+      font-weight: bold;
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    main {
+      padding: 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+    .section {
+      margin-top: 30px;
+    }
+    h2 {
+      border-bottom: 2px solid #009688;
+      padding-bottom: 5px;
+      color: #00796b;
+    }
+    .product, .cart-item, .inventory-item, .wishlist-item {
+      background: #f0f0f0;
+      margin-bottom: 10px;
+      padding: 15px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .product img {
+      height: 60px;
+      margin-right: 10px;
+      border-radius: 5px;
+    }
+    .product-details {
+      display: flex;
+      align-items: center;
+    }
+    .product-info {
+      display: flex;
+      flex-direction: column;
+    }
+    button {
+      background: #009688;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    button:hover {
+      background: #00796b;
+    }
+    .wallet, .promo-panel {
+      font-size: 1.1em;
+      margin-bottom: 20px;
+      background: #e0f2f1;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    #auth-section {
+      padding: 40px;
+      max-width: 400px;
+      margin: auto;
+      text-align: center;
+    }
+    #auth-section input {
+      margin: 10px 0;
+      padding: 10px;
+      width: 80%;
+      border-radius: 5px;
+      border: 1px solid #aaa;
+    }
+  </style>
+</head>
+<body>
+
+<header>⚽ StrikerZone - Football Gear Hub</header>
+
+<div id="auth-section">
+  <h2>Login / Sign Up</h2>
+  <input type="text" id="username" placeholder="Username"><br>
+  <input type="password" id="password" placeholder="Password"><br>
+  <button onclick="login()">Login</button>
+  <button onclick="signup()">Sign Up</button>
+</div>
+
+<main id="main" style="display:none;">
+  <div class="wallet">
+    🏦 Wallet Balance: ₹<span id="wallet">0</span>
+    <button onclick="logout()" style="float:right;">Logout</button>
+  </div>
+
+  <div class="promo-panel">
+    🎁 Enter Promo Code: <input type="text" id="promoCodeInput">
+    <button onclick="redeemPromo()">Redeem</button>
+  </div>
+
+  <div id="adminPanel" style="display:none;" class="section">
+    <h2>🛠️ Admin Panel</h2>
+    <input type="text" id="newProductName" placeholder="Product Name">
+    <input type="number" id="newProductPrice" placeholder="Price">
+    <button onclick="addProduct()">Add Product</button>
+  </div>
+
+  <div class="section">
+    <h2>🛍️ Available Products</h2>
+    <div id="product-list"></div>
+  </div>
+
+  <div class="section">
+    <h2>🛒 Your Cart</h2>
+    <div id="cart"></div>
+    <button onclick="checkout()">✅ Checkout</button>
+  </div>
+
+  <div class="section">
+    <h2>🎒 Your Inventory</h2>
+    <div id="inventory"></div>
+  </div>
+
+  <div class="section">
+    <h2>⭐ Wishlist</h2>
+    <div id="wishlist"></div>
+  </div>
+</main>
+
+<!-- REPLACE YOUR <script> TAG WITH THIS ONE BELOW -->
+<script>
+  let currentUser = null;
+  let users = JSON.parse(localStorage.getItem("users")) || {};
+  let products = [];
+
+  const sampleProducts = [
+    { name: "Pro Match Football", price: 2500 },
+    { name: "SpeedX Football Boots", price: 4800 },
+    { name: "Club Jersey - Blue", price: 2200 },
+    { name: "Goalkeeper Gloves Pro", price: 1900 },
+    { name: "Limited Edition Cleats", price: 5600 },
+    { name: "Signed Ronaldo Ball", price: 10000 },
+    { name: "Turf Shoes", price: 3500 },
+    { name: "Shin Guards", price: 850 },
+    { name: "Training Kit", price: 1750 },
+    { name: "Water Bottle", price: 400 }
+  ];
+
+  const promos = {
+    "GOAL100": 100,
+    "KICK500": 500,
+    "STRIKER1000": 1000
+  };
+
+  function signup() {
+    let u = document.getElementById("username").value;
+    let p = document.getElementById("password").value;
+    if (!u || !p) return alert("Please enter both fields.");
+    if (users[u]) return alert("User already exists.");
+    users[u] = { password: p, wallet: 10000, cart: [], inventory: [], wishlist: [] };
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("Account created. Please login.");
+  }
+
+  function login() {
+    let u = document.getElementById("username").value;
+    let p = document.getElementById("password").value;
+    if (!u || !p) return alert("Please enter both fields.");
+    if (!users[u]) return alert("User not found.");
+    if (users[u].password !== p) return alert("Wrong password.");
+    currentUser = u;
+    document.getElementById("auth-section").style.display = "none";
+    document.getElementById("main").style.display = "block";
+    if (u === "atiksh") document.getElementById("adminPanel").style.display = "block";
+    refreshStock();
+    renderAll();
+    if (currentUser === "atiksh") renderUserList();
+  }
+
+  function logout() {
+    currentUser = null;
+    document.getElementById("auth-section").style.display = "block";
+    document.getElementById("main").style.display = "none";
+    document.getElementById("adminPanel").style.display = "none";
+  }
+
+  function renderAll() {
+    updateWallet();
+    renderProducts();
+    renderCart();
+    renderInventory();
+    renderWishlist();
+  }
+
+  function updateWallet() {
+    document.getElementById("wallet").textContent = users[currentUser].wallet;
+    localStorage.setItem("users", JSON.stringify(users));
+  }
+
+  function renderProducts() {
+    const list = document.getElementById("product-list");
+    list.innerHTML = "";
+    products.forEach((product, i) => {
+      const available = Math.random() > 0.4;
+      const el = document.createElement("div");
+      el.className = "product";
+      el.innerHTML = `
+        <div class="product-details">
+          <img src="https://via.placeholder.com/60" />
+          <div class="product-info">
+            <strong>${product.name}</strong>
+            <span>₹${product.price}</span>
+          </div>
+        </div>
+        <div>
+          ${available ? `<button onclick="addToCart(${i})">Add to Cart</button>` : `<span style="color:red;">Out of Stock</span>`}
+          <button onclick="addToWishlist(${i})">❤</button>
+        </div>
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  function renderCart() {
+    const cartList = document.getElementById("cart");
+    cartList.innerHTML = "";
+    let cart = users[currentUser].cart;
+    if (!cart.length) return cartList.innerHTML = "<i>Your cart is empty.</i>";
+    cart.forEach((item, i) => {
+      const el = document.createElement("div");
+      el.className = "cart-item";
+      el.innerHTML = `
+        <div>${item.name} - ₹${item.price}</div>
+        <button onclick="removeFromCart(${i})">Remove</button>
+      `;
+      cartList.appendChild(el);
+    });
+  }
+
+  function renderInventory() {
+    const inv = document.getElementById("inventory");
+    inv.innerHTML = "";
+    let inventory = users[currentUser].inventory;
+    if (!inventory.length) return inv.innerHTML = "<i>Your inventory is empty.</i>";
+    inventory.forEach((item, i) => {
+      const el = document.createElement("div");
+      el.className = "inventory-item";
+      el.innerHTML = `
+        <div>${item.name} - ₹${item.price}</div>
+        <button onclick="sellItem(${i})">Sell (₹${Math.floor(item.price * 0.5)})</button>
+      `;
+      inv.appendChild(el);
+    });
+  }
+
+  function renderWishlist() {
+    const wish = document.getElementById("wishlist");
+    wish.innerHTML = "";
+    let wishlist = users[currentUser].wishlist;
+    if (!wishlist.length) return wish.innerHTML = "<i>Your wishlist is empty.</i>";
+    wishlist.forEach((item, i) => {
+      const el = document.createElement("div");
+      el.className = "wishlist-item";
+      el.innerHTML = `
+        <div>${item.name} - ₹${item.price}</div>
+        <button onclick="removeFromWishlist(${i})">Remove</button>
+      `;
+      wish.appendChild(el);
+    });
+  }
+
+  function addToCart(i) {
+    users[currentUser].cart.push(products[i]);
+    renderCart();
+    updateWallet();
+  }
+
+  function removeFromCart(i) {
+    users[currentUser].cart.splice(i, 1);
+    renderCart();
+  }
+
+  function checkout() {
+    const total = users[currentUser].cart.reduce((sum, item) => sum + item.price, 0);
+    if (users[currentUser].wallet >= total) {
+      users[currentUser].wallet -= total;
+      users[currentUser].inventory.push(...users[currentUser].cart);
+      users[currentUser].cart = [];
+      alert("✅ Purchase successful!");
+    } else alert("❌ Not enough funds!");
+    renderAll();
+  }
+
+  function sellItem(i) {
+    let item = users[currentUser].inventory.splice(i, 1)[0];
+    users[currentUser].wallet += Math.floor(item.price * 0.5);
+    renderAll();
+  }
+
+  function addToWishlist(i) {
+    users[currentUser].wishlist.push(products[i]);
+    renderWishlist();
+  }
+
+  function removeFromWishlist(i) {
+    users[currentUser].wishlist.splice(i, 1);
+    renderWishlist();
+  }
+
+  function redeemPromo() {
+    let code = document.getElementById("promoCodeInput").value.trim().toUpperCase();
+    if (promos[code]) {
+      users[currentUser].wallet += promos[code];
+      alert(`🎉 Promo redeemed! ₹${promos[code]} added.`);
+      delete promos[code];
+    } else {
+      alert("❌ Invalid or already used promo.");
+    }
+    updateWallet();
+  }
+
+  function refreshStock() {
+    products = [...sampleProducts];
+    users[currentUser].wallet += 500;
+    renderProducts();
+    updateWallet();
+  }
+
+  function addProduct() {
+    let name = document.getElementById("newProductName").value;
+    let price = parseInt(document.getElementById("newProductPrice").value);
+    if (!name || isNaN(price)) return alert("Enter valid name and price.");
+    sampleProducts.push({ name, price });
+    refreshStock();
+    alert("✅ Product added.");
+  }
+
+  function renderUserList() {
+    const panel = document.createElement("div");
+    panel.innerHTML = `<h3>👥 All Users</h3>`;
+    for (let user in users) {
+      if (user === "atiksh") continue;
+      let u = users[user];
+      const div = document.createElement("div");
+      div.style.marginBottom = "10px";
+      div.style.background = "#fff";
+      div.style.padding = "10px";
+      div.style.borderRadius = "6px";
+      div.style.boxShadow = "0 1px 4px rgba(0,0,0,0.1)";
+      div.innerHTML = `
+        <strong>${user}</strong><br>
+        💰 Wallet: ₹<input type="number" value="${u.wallet}" onchange="updateUserWallet('${user}', this.value)"> <br>
+        🎒 Inventory (${u.inventory.length} items)
+        <ul>
+          ${u.inventory.map((item, i) => `<li>${item.name} <button onclick="removeInventoryItem('${user}', ${i})">❌</button></li>`).join('')}
+        </ul>
+      `;
+      panel.appendChild(div);
+    }
+    document.getElementById("adminPanel").appendChild(panel);
+  }
+
+  function updateUserWallet(user, amount) {
+    users[user].wallet = parseInt(amount);
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("✅ Wallet updated!");
+  }
+
+  function removeInventoryItem(user, index) {
+    users[user].inventory.splice(index, 1);
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("❌ Item removed.");
+    renderUserList();
+  }
+
+  setInterval(() => {
+    if (currentUser) refreshStock();
+  }, 60000);
+</script>
+
+
+</body>
+</html>
